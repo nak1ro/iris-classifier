@@ -6,16 +6,20 @@ on:
   pull_request:
     branches: [ main ]
 
+# Name of your GHCR image (should match repo)
+env:
+  IMAGE_NAME: iris-classifier
+
 jobs:
   build-test-push:
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout repo
+      # Pull repo code
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Setup Python
+      # Install Python
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -28,15 +32,19 @@ jobs:
           pip install -r requirements.txt
           pip install pytest
 
+      # Train the model (creates model.joblib for tests)
+      - name: Train model
+        run: python "Del 1.py"
+
       # Run pytest
       - name: Run tests
         run: pytest -q
 
-      # Set up Docker Buildx
+      # Docker setup
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      # Log in to GHCR
+      # Login to GitHub Container Registry
       - name: Log in to GHCR
         uses: docker/login-action@v3
         with:
@@ -44,13 +52,14 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Build and push Docker image
+      # Build + push Docker image to GHCR
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
           file: Dockerfile
           push: true
+          # Two tags: latest + commit SHA
           tags: |
-            ghcr.io/${{ github.repository_owner }}/pythonproject:latest
-            ghcr.io/${{ github.repository_owner }}/pythonproject:${{ github.sha }}
+            ghcr.io/nak1ro/${{ env.IMAGE_NAME }}:latest
+            ghcr.io/nak1ro/${{ env.IMAGE_NAME }}:${{ github.sha }}
