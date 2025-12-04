@@ -12,5 +12,4 @@ def test_predict_returns_valid_species():
 
     species = predict(sample_features)
 
-    # Ensure output is a valid species name
     assert species in target_names
